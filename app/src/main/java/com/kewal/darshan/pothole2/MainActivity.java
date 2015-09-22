@@ -16,6 +16,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.ActivityRecognition;
+import com.google.android.gms.location.LocationServices;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, ResultCallback<Status> {
 
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(ActivityRecognition.API)
+                .addApi(LocationServices.API)
                 .build();
     }
 
@@ -88,11 +90,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     private PendingIntent getActivityDetectionPendingIntent() {
+
+
         // Reuse the PendingIntent if we already have it.
+
         if (mActivityDetectionPendingIntent != null) {
             return mActivityDetectionPendingIntent;
         }
         Intent intent = new Intent(this, MotionDetectService.class);
+
 
         // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
         // requestActivityUpdates() and removeActivityUpdates().

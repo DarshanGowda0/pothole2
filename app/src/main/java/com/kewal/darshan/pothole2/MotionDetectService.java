@@ -3,22 +3,56 @@ package com.kewal.darshan.pothole2;
 import android.app.IntentService;
 import android.app.Service;
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.location.Criteria;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
+import android.location.Location;
+
 
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by darshan on 22/09/15.
  */
-public class MotionDetectService extends IntentService {
+public class MotionDetectService extends IntentService implements SensorEventListener, LocationListener {
 
+    private SensorManager sensorManager;
+    double ax, ay, az;
+    private double mAccel;
+    private double mAccelCurrent;
+    private double mAccelLast;
+    public static final String TAG = "DARSHANROHAN";
+    Location location;
+    double latitude;
+    double longitude;
+    protected LocationManager locationManager;
+    boolean isGPSEnabled = false;
+    boolean canGetLocation = false;
+    Criteria criteria;
+    boolean isNetworkEnabled;
+    String bestProvider;
+    Location loc;
+    public static String FILENAME = "abhi.rohan.darshan";
 
     /**
      * Creates an IntentService.  Invoked by your subclass's constructor.
@@ -39,12 +73,17 @@ public class MotionDetectService extends IntentService {
         super.onCreate();
         Log.d("ROHAN", "service created");
 
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+                SensorManager.SENSOR_DELAY_NORMAL);
+
+
     }
 
     @Override
     protected void onHandleIntent(Intent intent) {
 
-        Log.d("ROHAN","service started");
+        Log.d("ROHAN", "service started");
 
         ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
 
@@ -54,6 +93,9 @@ public class MotionDetectService extends IntentService {
 
             if(da.getType()==DetectedActivity.IN_VEHICLE){
                 Log.d("ROHAN","In vehicle "+da.getConfidence());
+                if(da.getConfidence()>=70){
+                    //start recording
+                }
             }
 
             if(da.getType()==DetectedActivity.ON_FOOT){
@@ -67,6 +109,9 @@ public class MotionDetectService extends IntentService {
             }
             if(da.getType()==DetectedActivity.STILL){
                 Log.d("ROHAN","STILL"+da.getConfidence());
+                if(da.getConfidence()>=70){
+                    //stop recording
+                }
             }
 
             if(da.getType()==DetectedActivity.WALKING){
@@ -87,5 +132,233 @@ public class MotionDetectService extends IntentService {
 
 
 
+    }
+
+
+    public Location getLocation() {
+        try {
+            locationManager = (LocationManager) this
+                    .getSystemService(LOCATION_SERVICE);
+
+            // getting GPS status
+            isGPSEnabled = locationManager
+                    .isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+            // getting network status
+            isNetworkEnabled = locationManager
+                    .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+            if (!isGPSEnabled && !isNetworkEnabled) {
+                // no network provider is enabled
+                Log.d(TAG, " no network provider is enabled");
+            } else {
+                this.canGetLocation = true;
+                // First get location from Network Provider
+                if (isNetworkEnabled) {
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 1, this);
+                    Log.d(TAG, "Network");
+                    if (locationManager != null) {
+                        location = locationManager
+                                .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                        if (location != null) {
+                            latitude = location.getLatitude();
+                            longitude = location.getLongitude();
+                        }
+                    }
+                }
+                // if GPS Enabled get lat/long using GPS Services
+                if (isGPSEnabled) {
+                    if (location == null) {
+                        locationManager.requestLocationUpdates(
+                                LocationManager.GPS_PROVIDER,
+                                1000,
+                                1, this);
+                        Log.d(TAG, "GPS Enabled");
+                        if (locationManager != null) {
+                            location = locationManager
+                                    .getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                            if (location != null) {
+                                latitude = location.getLatitude();
+                                longitude = location.getLongitude();
+                            }
+                        }
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return location;
+    }
+
+
+    @Override
+    public void onLocationChanged(Location location) {
+        Log.d(TAG, "onlocationchange called");
+        loc = location;
+        Log.d(TAG, "" + location);
+        latitude = location.getLatitude();
+        longitude = location.getLongitude();
+
+        Log.d("DARSHANROHAN", "lat:" + latitude + "" + "lng:" + longitude);
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+
+
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            ax = event.values[0];
+            ay = event.values[1];
+            az = event.values[2];
+            mAccelLast = mAccelCurrent;
+            mAccelCurrent = Math.sqrt(ax * ax + ay * ay + az * az);
+            double delta = mAccelCurrent - mAccelLast;
+            mAccel = mAccel * 0.9f + delta;
+
+
+//            Log.d("Test"," "+ax+" "+ay+" "+az);
+            int temp = compare((int) ax, (int) ay, (int) az);
+
+            if (temp == 0) {
+                //orientation x
+//                Log.d("test","X orientation");
+//                Log.d("test",""+(mAccelLast-mAccelCurrent));
+                if ((mAccelLast - mAccelCurrent) > 7) {
+//                    Toast.makeText(this, "pothole x", Toast.LENGTH_SHORT).show();
+                    Log.d("DARSHANROHAN", "pothole x");
+                    if (loc == null) {
+                        loc = getLocation();
+                    }
+                    double latitude = loc.getLatitude();
+                    double longitude = loc.getLongitude();
+                    Log.d(TAG, "location : " + latitude + " " + longitude);
+                    storeData(latitude, longitude);
+                }
+            } else if (temp == 1) {
+                //orientation y
+//                Log.d("test","y orientation");
+//                Log.d("test",""+(mAccelLast-mAccelCurrent));
+                if ((mAccelLast - mAccelCurrent) > 7) {
+//                    Toast.makeText(this, "pothole y", Toast.LENGTH_SHORT).show();
+                    Log.d("DARSHANROHAN", "pothole y");
+                    if (loc == null) {
+                        loc = getLocation();
+                    }
+                    double latitude = loc.getLatitude();
+                    double longitude = loc.getLongitude();
+                    Log.d(TAG, "location : " + latitude + " " + longitude);
+                    storeData(latitude, longitude);
+
+                }
+            } else if (temp == 2) {
+                //orientation z
+//                Log.d("test","cur:"+mAccelCurrent+"      last:"+mAccelLast);
+                if ((mAccelLast - mAccelCurrent) > 7) {
+//                    Toast.makeText(this, "pothole z", Toast.LENGTH_SHORT).show();
+//                    Log.d("test",""+(mAccelLast-mAccelCurrent));
+                    Log.d("DARSHANROHAN", "pothole z");
+                    if (loc == null) {
+                        loc = getLocation();
+                    }
+                    double latitude = loc.getLatitude();
+                    double longitude = loc.getLongitude();
+
+                    Log.d(TAG, "location : " + latitude + " " + longitude);
+                    storeData(latitude, longitude);
+
+                }
+            }
+
+        }
+
+    }
+
+    private void storeData(double latitude, double longitude) {
+
+        class darsh implements Runnable {
+            double lat, lon;
+            JSONObject jsonObject = new JSONObject();
+            String jsonString;
+
+            darsh(double lat, double lon) {
+                this.lat = lat;
+                this.lon = lon;
+
+            }
+
+            @Override
+            public void run() {
+
+                try {
+                    jsonObject.put("latitude",lat);
+                    jsonObject.put("longitude",lon);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                jsonString=jsonObject.toString();
+                jsonString=jsonString+",";
+                    Log.d("testing",jsonString);
+                writeto(jsonString);
+
+
+
+
+            }
+        }
+
+        Thread thread = new Thread(new darsh(latitude, longitude));
+
+
+        thread.start();
+
+
+    }
+
+    void writeto(String str){
+        try {
+            FileOutputStream fos = openFileOutput(FILENAME, MODE_APPEND);
+            fos.write(str.getBytes());
+            fos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+    private int compare(int ax, int ay, int az) {
+        ax = Math.abs(ax);
+        ay = Math.abs(ay);
+        az = Math.abs(az);
+        if (ax > ay) {
+            if (ax > az) return 0;
+        } else if (ay > az) return 1;
+        else return 2;
+
+        return -1;
     }
 }
