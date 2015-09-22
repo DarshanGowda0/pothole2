@@ -100,6 +100,7 @@ public class MapsActivity extends FragmentActivity {
             MyItem offsetItem = new MyItem(latVal.get(i), lonVal.get(i));
             mClusterManager.addItem(offsetItem);
 
+
         }
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(12.978301, 77.571945), 14.0f));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
