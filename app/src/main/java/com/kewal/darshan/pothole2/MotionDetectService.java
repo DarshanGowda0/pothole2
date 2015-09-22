@@ -34,7 +34,7 @@ import java.util.List;
 /**
  * Created by darshan on 22/09/15.
  */
-public class MotionDetectService extends IntentService implements SensorEventListener, LocationListener {
+public class MotionDetectService extends IntentService{
 
     private SensorManager sensorManager;
     double ax, ay, az;
@@ -54,6 +54,9 @@ public class MotionDetectService extends IntentService implements SensorEventLis
     Location loc;
     public static String FILENAME = "abhi.rohan.darshan";
 
+    LocListener locListener;
+    mySensorListener mySL;
+
     /**
      * Creates an IntentService.  Invoked by your subclass's constructor.
      *
@@ -72,13 +75,29 @@ public class MotionDetectService extends IntentService implements SensorEventLis
     public void onCreate() {
         super.onCreate();
         Log.d("ROHAN", "service created");
+        locListener = new LocListener();
+        mySL = new mySensorListener();
+    }
 
+    public void registerSensor(){
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+        sensorManager.registerListener(mySL, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
                 SensorManager.SENSOR_DELAY_NORMAL);
 
-
     }
+
+    public void unregisterSensor(){
+        if(sensorManager!=null){
+            try {
+                sensorManager.unregisterListener(mySL);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
 
     @Override
     protected void onHandleIntent(Intent intent) {
@@ -89,20 +108,28 @@ public class MotionDetectService extends IntentService implements SensorEventLis
 
         ArrayList<DetectedActivity> detectedActivities = (ArrayList) result.getProbableActivities();
 
+        //remove this later before releasing
+        registerSensor();
+
         for (DetectedActivity da : detectedActivities) {
 
             if(da.getType()==DetectedActivity.IN_VEHICLE){
                 Log.d("ROHAN","In vehicle "+da.getConfidence());
                 if(da.getConfidence()>=70){
                     //start recording
+//                    registerSensor();
                 }
-            }
 
+            }
             if(da.getType()==DetectedActivity.ON_FOOT){
                 Log.d("ROHAN","on foot "+da.getConfidence());
             }
             if(da.getType()==DetectedActivity.ON_BICYCLE){
-                Log.d("ROHAN","on bicycle "+da.getConfidence());
+                Log.d("ROHAN", "on bicycle " + da.getConfidence());
+                if(da.getConfidence()>=70){
+                    //start recording
+//                    registerSensor();
+                }
             }
             if(da.getType()==DetectedActivity.RUNNING){
                 Log.d("ROHAN","running "+da.getConfidence());
@@ -111,117 +138,22 @@ public class MotionDetectService extends IntentService implements SensorEventLis
                 Log.d("ROHAN","STILL"+da.getConfidence());
                 if(da.getConfidence()>=70){
                     //stop recording
+//                    unregisterSensor();
                 }
             }
-
             if(da.getType()==DetectedActivity.WALKING){
                 Log.d("ROHAN","Walking "+da.getConfidence());
             }
-
             if(da.getType()==DetectedActivity.TILTING){
                 Log.d("ROHAN","tilting "+da.getConfidence());
             }
-
             if(da.getType()==DetectedActivity.UNKNOWN){
                 Log.d("ROHAN","Unknown "+da.getConfidence());
             }
-
-
-
         }
-
-
-
     }
 
-
-    public Location getLocation() {
-        try {
-            locationManager = (LocationManager) this
-                    .getSystemService(LOCATION_SERVICE);
-
-            // getting GPS status
-            isGPSEnabled = locationManager
-                    .isProviderEnabled(LocationManager.GPS_PROVIDER);
-
-            // getting network status
-            isNetworkEnabled = locationManager
-                    .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
-            if (!isGPSEnabled && !isNetworkEnabled) {
-                // no network provider is enabled
-                Log.d(TAG, " no network provider is enabled");
-            } else {
-                this.canGetLocation = true;
-                // First get location from Network Provider
-                if (isNetworkEnabled) {
-                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 1, this);
-                    Log.d(TAG, "Network");
-                    if (locationManager != null) {
-                        location = locationManager
-                                .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                        if (location != null) {
-                            latitude = location.getLatitude();
-                            longitude = location.getLongitude();
-                        }
-                    }
-                }
-                // if GPS Enabled get lat/long using GPS Services
-                if (isGPSEnabled) {
-                    if (location == null) {
-                        locationManager.requestLocationUpdates(
-                                LocationManager.GPS_PROVIDER,
-                                1000,
-                                1, this);
-                        Log.d(TAG, "GPS Enabled");
-                        if (locationManager != null) {
-                            location = locationManager
-                                    .getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                            if (location != null) {
-                                latitude = location.getLatitude();
-                                longitude = location.getLongitude();
-                            }
-                        }
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return location;
-    }
-
-
-    @Override
-    public void onLocationChanged(Location location) {
-        Log.d(TAG, "onlocationchange called");
-        loc = location;
-        Log.d(TAG, "" + location);
-        latitude = location.getLatitude();
-        longitude = location.getLongitude();
-
-        Log.d("DARSHANROHAN", "lat:" + latitude + "" + "lng:" + longitude);
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
+    private void getSensorChangedDetails(SensorEvent event) {
 
 
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
@@ -291,6 +223,64 @@ public class MotionDetectService extends IntentService implements SensorEventLis
 
     }
 
+    public Location getLocation() {
+        try {
+            locationManager = (LocationManager) this
+                    .getSystemService(LOCATION_SERVICE);
+
+            // getting GPS status
+            isGPSEnabled = locationManager
+                    .isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+            // getting network status
+            isNetworkEnabled = locationManager
+                    .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+            if (!isGPSEnabled && !isNetworkEnabled) {
+                // no network provider is enabled
+                Log.d(TAG, " no network provider is enabled");
+            } else {
+                this.canGetLocation = true;
+                // First get location from Network Provider
+                if (isNetworkEnabled) {
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 1, locListener);
+                    Log.d(TAG, "Network");
+                    if (locationManager != null) {
+                        location = locationManager
+                                .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                        if (location != null) {
+                            latitude = location.getLatitude();
+                            longitude = location.getLongitude();
+                        }
+                    }
+                }
+                // if GPS Enabled get lat/long using GPS Services
+                if (isGPSEnabled) {
+                    if (location == null) {
+                        locationManager.requestLocationUpdates(
+                                LocationManager.GPS_PROVIDER,
+                                1000,
+                                1,locListener);
+                        Log.d(TAG, "GPS Enabled");
+                        if (locationManager != null) {
+                            location = locationManager
+                                    .getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                            if (location != null) {
+                                latitude = location.getLatitude();
+                                longitude = location.getLongitude();
+                            }
+                        }
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return location;
+    }
+
     private void storeData(double latitude, double longitude) {
 
         class darsh implements Runnable {
@@ -315,39 +305,28 @@ public class MotionDetectService extends IntentService implements SensorEventLis
                 }
                 jsonString=jsonObject.toString();
                 jsonString=jsonString+",";
-                    Log.d("testing",jsonString);
-                writeto(jsonString);
-
-
-
+                writeTo(jsonString);
 
             }
         }
 
         Thread thread = new Thread(new darsh(latitude, longitude));
 
-
         thread.start();
-
 
     }
 
-    void writeto(String str){
+    void writeTo(String str){
         try {
             FileOutputStream fos = openFileOutput(FILENAME, MODE_APPEND);
             fos.write(str.getBytes());
             fos.close();
+            Log.d(TAG,"written to "+FILENAME+" successfully");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
     }
 
     private int compare(int ax, int ay, int az) {
@@ -361,4 +340,48 @@ public class MotionDetectService extends IntentService implements SensorEventLis
 
         return -1;
     }
+
+    public class LocListener implements LocationListener {
+
+
+        @Override
+        public void onLocationChanged(Location location) {
+            Log.d(TAG, "onlocationchange called");
+            loc = location;
+            Log.d(TAG, "" + location);
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
+
+            Log.d("DARSHANROHAN", "lat:" + latitude + "" + "lng:" + longitude);
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    }
+
+    public class mySensorListener implements SensorEventListener{
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            getSensorChangedDetails(event);
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+        }
+    }
+
 }
