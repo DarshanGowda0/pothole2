@@ -17,6 +17,9 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.maps.android.clustering.ClusterItem;
+import com.google.maps.android.clustering.ClusterManager;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, ResultCallback<Status> {
 
@@ -75,7 +78,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         Log.i("ROHAN", "Connection suspended");
         mGoogleApiClient.connect();
     }
-
+    public void next(View view) {
+        Intent intent = new Intent(this,MapsActivity.class);
+        startActivity(intent);
+    }
     public void start(View view) {
         if (!mGoogleApiClient.isConnected()) {
             Toast.makeText(this, "GoogleApiClient not yet connected. Try again.",
