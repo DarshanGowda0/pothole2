@@ -9,6 +9,7 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -48,7 +49,7 @@ public class SendDataReciever extends BroadcastReceiver
             Log.d("ROHAN", "Connected");
             String read = readFile(context);
             if(read!=null){
-             sendData(read);
+             sendData(read,context);
             }
         } else {
 
@@ -57,7 +58,7 @@ public class SendDataReciever extends BroadcastReceiver
 
     }
 
-    private void sendData(final String read) {
+    private void sendData(final String read, final Context context) {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -102,7 +103,9 @@ public class SendDataReciever extends BroadcastReceiver
                         }
                         mBufferedInputStream.close();
 
-                        Log.d("ROHAN",""+Response);
+                        Log.d("ROHAN", "" + Response);
+
+                        deleteFile(context);
 
 
                     } else {
@@ -151,6 +154,20 @@ public class SendDataReciever extends BroadcastReceiver
             e.printStackTrace();
         }
         return ret;
+    }
+
+    private boolean deleteFile(Context context){
+        boolean deleted=false;
+
+        try {
+            File dir = context.getFilesDir();
+            File file = new File(dir, MotionDetectService.FILENAME);
+            deleted = file.delete();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return deleted;
+
     }
 
 
