@@ -34,7 +34,7 @@ import java.util.List;
 /**
  * Created by darshan on 22/09/15.
  */
-public class MotionDetectService extends IntentService{
+public class MotionDetectService extends Service{
 
     private SensorManager sensorManager;
     double ax, ay, az;
@@ -57,18 +57,12 @@ public class MotionDetectService extends IntentService{
     LocListener locListener;
     mySensorListener mySL;
 
-    /**
-     * Creates an IntentService.  Invoked by your subclass's constructor.
-     *
-     * @param name Used to name the worker thread, important only for debugging.
-     */
-    public MotionDetectService(String name) {
-        super(name);
-    }
 
-    public MotionDetectService() {
-        super("");
-
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG,"service destroyed");
+        unregisterSensor();
     }
 
     @Override
@@ -77,6 +71,12 @@ public class MotionDetectService extends IntentService{
         Log.d("ROHAN", "service created");
         locListener = new LocListener();
         mySL = new mySensorListener();
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     public void registerSensor(){
@@ -97,10 +97,13 @@ public class MotionDetectService extends IntentService{
     }
 
 
-
-
     @Override
-    protected void onHandleIntent(Intent intent) {
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        callOnHandle(intent);
+        return Service.START_REDELIVER_INTENT;
+    }
+
+    void callOnHandle(Intent intent){
 
         Log.d("ROHAN", "service started");
 
@@ -151,6 +154,7 @@ public class MotionDetectService extends IntentService{
                 Log.d("ROHAN","Unknown "+da.getConfidence());
             }
         }
+
     }
 
     private void getSensorChangedDetails(SensorEvent event) {
@@ -346,13 +350,11 @@ public class MotionDetectService extends IntentService{
 
         @Override
         public void onLocationChanged(Location location) {
-            Log.d(TAG, "onlocationchange called");
             loc = location;
             Log.d(TAG, "" + location);
             latitude = location.getLatitude();
             longitude = location.getLongitude();
 
-            Log.d("DARSHANROHAN", "lat:" + latitude + "" + "lng:" + longitude);
         }
 
         @Override

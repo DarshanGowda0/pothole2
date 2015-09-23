@@ -43,7 +43,7 @@ public class SendDataReciever extends BroadcastReceiver
                 .getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
 
 
-        if (wifi.isAvailable()) {
+        if (wifi.isConnected()) {
             // Do something
 
             Log.d("ROHAN", "Connected");
