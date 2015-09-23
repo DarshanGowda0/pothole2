@@ -48,6 +48,7 @@ public class SendDataReciever extends BroadcastReceiver
 
             Log.d("ROHAN", "Connected");
             String read = readFile(context);
+            read = read.substring(0,read.length()-1);
             read = "["+read+"]";
             if(read!=null){
              sendData(read,context);
