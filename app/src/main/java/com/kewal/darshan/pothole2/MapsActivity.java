@@ -2,6 +2,7 @@ package com.kewal.darshan.pothole2;
 
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -20,6 +21,8 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.vision.barcode.Barcode;
 import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 
@@ -35,6 +38,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, ResultCallback<Status> {
 
@@ -149,8 +153,24 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
 
 
         }
+        mMap.setMyLocationEnabled(true);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(12.978301, 77.571945), 14.0f));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(10), 2000, null);
+
+/*
+        PolylineOptions polylineOptions = new PolylineOptions();
+        polylineOptions.color(Color.BLUE);
+
+        LatLng latLng =  new LatLng(12.978301,77.57195);
+        polylineOptions.add(latLng);
+
+        LatLng latLng1 = new LatLng(12.578,77.645);
+        polylineOptions.add(latLng1);
+
+        mMap.addPolyline(polylineOptions);
+
+*/
+
 
 //        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
     }

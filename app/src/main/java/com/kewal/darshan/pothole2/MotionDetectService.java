@@ -34,7 +34,7 @@ import java.util.List;
 /**
  * Created by darshan on 22/09/15.
  */
-public class MotionDetectService extends Service{
+public class MotionDetectService extends IntentService{
 
     private SensorManager sensorManager;
     double ax, ay, az;
@@ -57,12 +57,18 @@ public class MotionDetectService extends Service{
     LocListener locListener;
     mySensorListener mySL;
 
+    /**
+     * Creates an IntentService.  Invoked by your subclass's constructor.
+     *
+     * @param name Used to name the worker thread, important only for debugging.
+     */
+    public MotionDetectService(String name) {
+        super(name);
+    }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "service destroyed");
-        unregisterSensor();
+    public MotionDetectService() {
+        super("");
+
     }
 
     @Override
@@ -71,12 +77,6 @@ public class MotionDetectService extends Service{
         Log.d("ROHAN", "service created");
         locListener = new LocListener();
         mySL = new mySensorListener();
-    }
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
     }
 
     public void registerSensor(){
@@ -97,22 +97,10 @@ public class MotionDetectService extends Service{
     }
 
 
+
+
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        callOnHandle(intent);
-        return Service.START_REDELIVER_INTENT;
-    }
-
-    void callOnHandle(Intent intent){
-
-        //remove this later before releasing
-        registerSensor();
-
-//        callMovementDetection(intent);
-
-    }
-
-    private void callMovementDetection(Intent intent) {
+    protected void onHandleIntent(Intent intent) {
 
         Log.d("ROHAN", "service started");
 
@@ -120,7 +108,8 @@ public class MotionDetectService extends Service{
 
         ArrayList<DetectedActivity> detectedActivities = (ArrayList) result.getProbableActivities();
 
-
+        //remove this later before releasing
+        registerSensor();
 
         for (DetectedActivity da : detectedActivities) {
 
@@ -162,7 +151,6 @@ public class MotionDetectService extends Service{
                 Log.d("ROHAN","Unknown "+da.getConfidence());
             }
         }
-
     }
 
     private void getSensorChangedDetails(SensorEvent event) {
@@ -358,11 +346,13 @@ public class MotionDetectService extends Service{
 
         @Override
         public void onLocationChanged(Location location) {
+            Log.d(TAG, "onlocationchange called");
             loc = location;
             Log.d(TAG, "" + location);
             latitude = location.getLatitude();
             longitude = location.getLongitude();
 
+            Log.d("DARSHANROHAN", "lat:" + latitude + "" + "lng:" + longitude);
         }
 
         @Override

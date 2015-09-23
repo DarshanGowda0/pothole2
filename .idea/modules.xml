@@ -2,9 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Pothole2.iml" filepath="$PROJECT_DIR$/Pothole2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/pothole2.iml" filepath="$PROJECT_DIR$/pothole2.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/pothole2.iml" filepath="$PROJECT_DIR$/pothole2.iml" />
     </modules>
   </component>
 </project>
+

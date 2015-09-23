@@ -33,12 +33,13 @@
             android:value="AIzaSyCwW5BcyEXBkTn97nQIH8Pj8l7I9EquYMQ"
             />
 
-        <activity android:name=".MapsActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+        <activity android:name=".MapsActivity"
+            android:value="@string/google_maps_key">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
         </activity>
 
         <service android:name=".MotionDetectService"/>
