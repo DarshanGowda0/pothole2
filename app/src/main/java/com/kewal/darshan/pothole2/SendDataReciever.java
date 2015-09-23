@@ -28,7 +28,7 @@ public class SendDataReciever extends BroadcastReceiver
 {
 
     BufferedReader mBufferedInputStream;
-    String Response = "",KEY="";
+    String Response = "",KEY="loc";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -43,11 +43,12 @@ public class SendDataReciever extends BroadcastReceiver
                 .getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
 
 
-        if (wifi.isAvailable() || mobile.isAvailable()) {
+        if (wifi.isAvailable()) {
             // Do something
 
             Log.d("ROHAN", "Connected");
             String read = readFile(context);
+            read = "["+read+"]";
             if(read!=null){
              sendData(read,context);
             }
@@ -67,7 +68,7 @@ public class SendDataReciever extends BroadcastReceiver
 
                 // add URL
 
-                String urlString = "";
+                String urlString = "http://84.200.84.218/pothole/putlocj.php";
                 URL url = null;
                 try {
                     url = new URL(urlString);
