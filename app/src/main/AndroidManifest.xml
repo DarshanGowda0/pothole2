@@ -16,6 +16,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <uses-feature
         android:name="android.hardware.sensor.accelerometer"
@@ -45,6 +46,12 @@
         <receiver android:name=".SendDataReciever" >
             <intent-filter>
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".On_off_BC">
+            <intent-filter>
+                <action android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
 

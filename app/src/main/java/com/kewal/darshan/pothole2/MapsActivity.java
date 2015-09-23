@@ -59,6 +59,14 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
         setUpMapIfNeeded();
 //        init();
         new getData().execute();
+        startServiceInit();
+
+    }
+
+    private void startServiceInit() {
+
+        Intent in = new Intent(this,MotionDetectService.class);
+        startService(in);
 
     }
 
@@ -215,7 +223,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
     @Override
     public void onConnected(Bundle connectionHint) {
         Log.i("ROHAN", "Connected to GoogleApiClient");
-        init();
+//        init();
     }
 
     @Override

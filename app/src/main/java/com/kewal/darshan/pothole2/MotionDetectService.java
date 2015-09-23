@@ -61,7 +61,7 @@ public class MotionDetectService extends Service{
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG,"service destroyed");
+        Log.d(TAG, "service destroyed");
         unregisterSensor();
     }
 
@@ -105,14 +105,22 @@ public class MotionDetectService extends Service{
 
     void callOnHandle(Intent intent){
 
+        //remove this later before releasing
+        registerSensor();
+
+//        callMovementDetection(intent);
+
+    }
+
+    private void callMovementDetection(Intent intent) {
+
         Log.d("ROHAN", "service started");
 
         ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
 
         ArrayList<DetectedActivity> detectedActivities = (ArrayList) result.getProbableActivities();
 
-        //remove this later before releasing
-        registerSensor();
+
 
         for (DetectedActivity da : detectedActivities) {
 
